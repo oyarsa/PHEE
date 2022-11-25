@@ -8,13 +8,8 @@ ReinforcementTrainer:
   sentence_level_batch: true
 embeddings:
   TransformerWordEmbeddings-1:
-    model: ./resources/taggers/en-bert_phee_finetune/bert-base-cased
+    model: ./resources/taggers/en-bert_fgcr_finetune/bert-base-cased
     embedding_name: bert-base-cased
-    layers: '-1'
-    pooling_operation: mean
-  TransformerWordEmbeddings-2:
-    model: ./resources/taggers/en-biobert_phee_finetune/biobert_v1.1_pubmed
-    embedding_name: biobert_v1.1_pubmed
     layers: '-1'
     pooling_operation: mean
 
@@ -30,7 +25,7 @@ model_name: fgcr_ace
 ner:
   Corpus: ColumnCorpus-FGCR
   tag_dictionary: resources/taggers/fgcr_tags.pkl
-  ColumnCorpus-PHEE:
+  ColumnCorpus-FGCR:
     data_folder: datasets/fgcr
     column_format:
       0: text
