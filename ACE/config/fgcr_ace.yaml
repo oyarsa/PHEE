@@ -12,11 +12,6 @@ embeddings:
     embedding_name: bert-base-cased
     layers: '-1'
     pooling_operation: mean
-  TransformerWordEmbeddings-2:
-    model: ./resources/taggers/en-roberta_fgcr_finetune/roberta-base
-    embedding_name: roberta-base
-    layers: '-1'
-    pooling_operation: mean
 
 interpolation: 0.5
 model:
@@ -43,7 +38,7 @@ train:
   discount: 0.5
   learning_rate: 0.1
   max_episodes: 30
-  max_epochs: 150
+  max_epochs: 50
   max_epochs_without_improvement: 10
   mini_batch_size: 32
   monitor_test: false
