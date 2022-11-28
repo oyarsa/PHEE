@@ -12,6 +12,11 @@ embeddings:
     embedding_name: bert-base-cased
     layers: '-1'
     pooling_operation: mean
+  TransformerWordEmbeddings-2:
+    model: ./resources/taggers/en-roberta_fgcr_finetune/roberta-base
+    embedding_name: roberta-base
+    layers: '-1'
+    pooling_operation: mean
 
 interpolation: 0.5
 model:
