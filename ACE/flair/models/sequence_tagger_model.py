@@ -408,7 +408,7 @@ class SequenceTagger(flair.nn.Model):
 		#   self.init_biaf(teacher_hidden,num_teachers)
 		if self.use_mfvi:
 			self.mfvi=MFVI(hidden_size*num_directions,self.tagset_size,**self.config['MFVI'])
-		
+
 		#================debug================
 		# 5: de only, 9: en only
 		# self.selection=torch.cuda.FloatTensor([1.,0.])
@@ -418,7 +418,7 @@ class SequenceTagger(flair.nn.Model):
 		# pdb.set_trace()
 		if not testing:
 			self.to(flair.device)
-		
+
 	def _get_state_dict(self):
 		model_state = {
 			"state_dict": self.state_dict(),
@@ -719,7 +719,7 @@ class SequenceTagger(flair.nn.Model):
 					teacher_features[s_id][: len(sentence)] = sentence.get_professor_teacher_prediction(professor_interpolation=professor_interpolation)
 				else:
 					teacher_features[s_id][: len(sentence)] = sentence.get_teacher_prediction()
-			
+
 			distillation_loss = self._calculate_distillation_loss(features, teacher_features, torch.Tensor(lengths), T=self.temperature, teacher_is_score=not self.distill_prob)
 		return interpolation * distillation_loss + (1-interpolation) * target_loss
 	def sequence_mask(self, lengths, max_len=None):
@@ -865,10 +865,10 @@ class SequenceTagger(flair.nn.Model):
 					else:
 						selection=torch.sigmoid(self.selector)
 						sentence_tensor = torch.cat([sentences.features[x].to(flair.device) * selection[idx] for idx, x in enumerate(sorted(sentences.features.keys()))],-1)
-					
+
 				# print(self.selector)
 				# print(selection)
-				
+
 			else:
 				sentence_tensor = torch.cat([sentences.features[x].to(flair.device) for x in sorted(sentences.features.keys())],-1)
 			#==============debug==============
@@ -926,7 +926,7 @@ class SequenceTagger(flair.nn.Model):
 				sentence_tensor = self.word_dropout(sentence_tensor)
 			if self.use_locked_dropout > 0.0:
 				sentence_tensor = self.locked_dropout(sentence_tensor)
-		
+
 		if self.relearn_embeddings:
 			sentence_tensor = self.embedding2nn(sentence_tensor)
 
@@ -964,7 +964,7 @@ class SequenceTagger(flair.nn.Model):
 			# if self.use_locked_dropout > 0.0:
 			#   sentence_tensor = self.locked_dropout(sentence_tensor)
 		elif self.use_cnn:
-			
+
 			# transpose to batch_first mode
 			sentence_tensor = sentence_tensor.transpose_(0, 1)
 			batch_size = len(sentences)
@@ -986,13 +986,13 @@ class SequenceTagger(flair.nn.Model):
 		if self.use_decoder_timer:
 			self.time=time.time()
 		features = self.linear(sentence_tensor)
-		
+
 		self.mask=self.sequence_mask(torch.tensor(lengths),longest_token_sequence_in_batch).cuda().type_as(features)
 		if self.use_mfvi:
 			# self.sent_feats=sentence_tensor
 			token_feats=sentence_tensor
 			unary_score=features
-			
+
 			features=self.mfvi(token_feats,unary_score,self.mask,lengths=torch.LongTensor(lengths).to(flair.device))
 		if (self.biaf_attention or self.use_transition_attention):
 			if self.token_level_attention:
@@ -1019,12 +1019,12 @@ class SequenceTagger(flair.nn.Model):
 			# self.enhanced_transitions = atts.unsqueeze(-1).unsqueeze(-1)*self.transitions.unsqueeze(0)
 			# (batch_size, target_languages) * (target_languages,num_tags,num_tags) -> (batch_size, num_tags, num_tags)
 			self.enhanced_transitions = torch.tensordot(atts,self.transitions,dims=1)
-			return 
+			return
 		if self.use_language_id:
 			sent_lang_id = torch.cuda.LongTensor([sentence.lang_id for sentence in sentences])
 			# (batch_size,) (target_languages,num_tags,num_tags) -> (batch_size, num_tags, num_tags)
 			self.enhanced_transitions = torch.index_select(self.transitions,0,sent_lang_id)
-			return 
+			return
 	def _score_sentence(self, feats, tags, lens_):
 
 		start = torch.tensor(
@@ -1124,11 +1124,11 @@ class SequenceTagger(flair.nn.Model):
 		lengths: List[int] = [len(sentence.tokens) for sentence in sentences]
 		tags = []
 		all_tags = []
-		
+
 		# if self.use_mfvi:
 		#     token_feats=self.sent_feats
 		#     unary_score=features
-		#     
+		#
 		#     q_value=self.mfvi(token_feats,unary_score,mask)
 		#     q_value=self.mfvi()
 		if not self.use_crf:
@@ -1221,7 +1221,7 @@ class SequenceTagger(flair.nn.Model):
 				forward_var
 				+ self.enhanced_transitions[current_idx][self.tag_dictionary.get_idx_for_item(STOP_TAG)]
 			)
-		else:   
+		else:
 			terminal_var = (
 				forward_var
 				+ self.transitions[self.tag_dictionary.get_idx_for_item(STOP_TAG)]
@@ -1319,7 +1319,7 @@ class SequenceTagger(flair.nn.Model):
 			cloned[:, i + 1, :] = max_tag_var + agg_
 
 			forward_var = cloned
-		
+
 		if distill_mode:
 			# from the first tag to the last tag
 			# forward_var = forward_var[:,1:].clone()
@@ -1348,15 +1348,15 @@ class SequenceTagger(flair.nn.Model):
 			bw_transitions=self.transitions.transpose(0,1)
 		# n * m * d
 		reversed_feats = torch.zeros_like(feats)
-		
+
 		for i, feat in enumerate(feats):
 			# m * d -> k * d, reverse over tokens -> m * d
 			reversed_feats[i][:lens_[i]] = feat[:lens_[i]].flip([0])
 			# reverse_feats[i][:lens_[i]] = feat[:lens_[i]].filp(0)
-		
+
 		init_alphas = torch.FloatTensor(self.tagset_size).fill_(-1e12)
 		init_alphas[self.tag_dictionary.get_idx_for_item(STOP_TAG)] = 0.0
-		
+
 		forward_var = torch.zeros(
 			reversed_feats.shape[0],
 			reversed_feats.shape[1] + 1,
@@ -1407,10 +1407,10 @@ class SequenceTagger(flair.nn.Model):
 			backward_var = forward_var[:,1:].clone()
 			new_backward_var = torch.zeros_like(backward_var)
 			for i, var in enumerate(backward_var):
-				
+
 				# flip over tokens, [num_tokens * num_tags]
 				new_backward_var[i,:lens_[i]] = var[:lens_[i]].flip([0])
-				
+
 			return new_backward_var
 
 		forward_var = forward_var[range(forward_var.shape[0]), lens_, :]
@@ -1429,7 +1429,7 @@ class SequenceTagger(flair.nn.Model):
 
 		return alpha
 
-	
+
 	@staticmethod
 	def _filter_empty_sentences(sentences: List[Sentence]) -> List[Sentence]:
 		filtered_sentences = [sentence for sentence in sentences if sentence.tokens]
@@ -1730,7 +1730,7 @@ class SequenceTagger(flair.nn.Model):
 		## back_points: (seq_len, batch, tag_size, nbest)
 		## decode from the end, padded position ids are 0, which will be filtered in following evaluation
 		decode_idx = autograd.Variable(torch.LongTensor(seq_len, batch_size, nbest)).to(device=flair.device)
-		
+
 		decode_idx[-1] = pointer.data/nbest
 		# print "pointer-1:",pointer[2]
 		# exit(0)
@@ -1873,7 +1873,7 @@ class FastSequenceTagger(SequenceTagger):
 			else:
 				teacher_scores = torch.stack([sentence.get_teacher_posteriors() for sentence in data_points],0)
 			posterior_loss = 0
-			
+
 			for i in range(teacher_scores.shape[-2]):
 				posterior_loss += self._calculate_distillation_loss(forward_backward_score, teacher_scores[:,:,i], mask, T=self.temperature)
 			posterior_loss/=teacher_scores.shape[-2]
@@ -1889,7 +1889,7 @@ class FastSequenceTagger(SequenceTagger):
 			else:
 				teacher_tags = torch.stack([sentence.get_teacher_target() for sentence in data_points],0)
 			# proprocess, convert k best to batch wise
-			
+
 			seq_len=teacher_tags.shape[1]
 			best_k=teacher_tags.shape[-1]
 			num_tags=features.shape[-1]
@@ -1908,33 +1908,33 @@ class FastSequenceTagger(SequenceTagger):
 			# batch*bestk, seq_len, target_size -> batch*bestk, seq_len, target_size, target_size
 			feature_scores=features_input.unsqueeze(-2)
 			# crf_scores = feature_scores + self.transitions.view(1, 1, self.tagset_size, self.tagset_size)
-			
-			
+
+
 			# features_input = torch.rand_like(features_input).cuda()
 			forward_score = self._forward_alg(features_input, lengths_input)
 			gold_score = self._score_sentence(features_input, tags, lengths_input, mask_input)
 			distillation_loss=forward_score-gold_score
-			
+
 			if self.crf_attention:
 				if hasattr(data_points,'teacher_features') and 'weights' in data_points.teacher_features:
 					teacher_atts = data_points.teacher_features['weights'].to(flair.device)
 				else:
 					teacher_atts=torch.stack([sentence.get_teacher_weights() for sentence in data_points],0)
 				att_nums=sum([len(sentence._teacher_weights) for sentence in data_points])
-				
+
 				if self.distill_with_gold:
 					# [batch, length]
 					tag_list=torch.stack([getattr(sentence,self.tag_type+'_tags').to(flair.device) for sentence in data_points],0).long()
 					comparison=((teacher_tags-tag_list.unsqueeze(-1))!=0).float()*mask.unsqueeze(-1)
 					num_error=comparison.sum(1)
 					if self.exp_score:
-						
+
 						score_weights=torch.exp(-num_error/self.gold_const)
 					else:
 						score_error=num_error+self.gold_const
 						# [batch, best_k]
 						score_weights=self.gold_const/score_error
-					
+
 					teacher_atts = teacher_atts * score_weights
 					# note that the model with multiple teachers for single language is not good
 					teacher_atts = teacher_atts/teacher_atts.sum(-1,keepdim=True) * (att_nums/len(score_weights))
@@ -1971,7 +1971,7 @@ class FastSequenceTagger(SequenceTagger):
 						teacher_attention = biaffine(input_feats,teacher_sentfeats.view(-1,teacher_sentfeats.shape[-2],teacher_sentfeats.shape[-1]))
 						teacher_attention = teacher_attention.view(len(features),max_len,-1)
 						teacher_features = torch.stack([sentence.get_teacher_prediction(pooling='token_weighted', weight=teacher_attention[idx]) for idx,sentence in enumerate(data_points)],0)
-					else:    
+					else:
 						if self.use_language_vector:
 							input_feats=input_vecs
 						else:
@@ -2079,7 +2079,7 @@ class FastSequenceTagger(SequenceTagger):
 				tag_list.append(tag)
 
 			tag_list, _ = pad_tensors(tag_list)
-		
+
 		if self.use_crf:
 			forward_score = self._forward_alg(features, lengths)
 			gold_score = self._score_sentence(features, tag_list, torch.tensor(lengths), mask=mask)
@@ -2088,7 +2088,7 @@ class FastSequenceTagger(SequenceTagger):
 		# elif self.use_mfvi:
 		#     token_feats=self.sent_feats
 		#     unary_score=features
-		#     
+		#
 		#     q_value=self.mfvi(token_feats,unary_score,mask)
 		#     score = torch.nn.functional.cross_entropy(q_value.view(-1,q_value.shape[-1]), tag_list.view(-1,), reduction='none') * mask.view(-1,)
 		#     if self.sentence_level_loss:
@@ -2109,7 +2109,7 @@ class FastSequenceTagger(SequenceTagger):
 				score = score.sum()/mask.sum()
 		if self.posterior_constraint:
 			# student forward-backward score
-			
+
 			forward_var = self._forward_alg(features, lengths, distill_mode=True)
 			backward_var = self._backward_alg(features, lengths)
 			# forward_var = self.forward_var
@@ -2120,8 +2120,8 @@ class FastSequenceTagger(SequenceTagger):
 				posterior_score = posterior_score.sum()/features.shape[0]
 			else:
 				posterior_score = posterior_score.sum()/mask.sum()
-			
-			
+
+
 			score = (1-self.posterior_interpolation) * score + self.posterior_interpolation * posterior_score
 		if self.unlabel_entropy_loss:
 			entropy = (self.entropy_loss(features)*self.mask[:,:,None]).sum([-1,-2])
@@ -2158,9 +2158,9 @@ class FastSequenceTagger(SequenceTagger):
 			pad_stop_tags = pad_stop_tags.cuda()*transition_mask2.long()+(1-transition_mask2.long())*self.tag_dictionary.get_idx_for_item(STOP_TAG)
 		except:
 			pdb.set_trace()
-		
+
 		my_emission=torch.gather(feats,2,tags.unsqueeze(-1))*mask.unsqueeze(-1)
-		
+
 		my_emission=my_emission.sum(-1).sum(-1)
 		# (bat_size, seq_len + 1, target_size_to, target_size_from)
 		bat_size=feats.shape[0]
@@ -2178,7 +2178,7 @@ class FastSequenceTagger(SequenceTagger):
 		ts_energy=ts_energy.squeeze(2)
 		# (bat_size, seq_len + 1, target_size_from) -> (bat_size, seq_len + 1)
 		ts_energy=torch.gather(ts_energy,2,pad_start_tags.unsqueeze(-1)).squeeze(-1)
-		
+
 		ts_energy=ts_energy*transition_mask
 		ts_energy=ts_energy.sum(1)
 		score=ts_energy+my_emission
@@ -2244,6 +2244,8 @@ class FastSequenceTagger(SequenceTagger):
 						predicted_tags = [
 							(tag.tag, str(tag)) for tag in sentence.get_spans("predicted")
 						]
+						if len(gold_tags) != len(predicted_tags):
+							log.warning("gold and predicted lengths differ: %d - %d", len(gold_tags), len(predicted_tags))
 
 						# check for true positives, false positives and false negatives
 						for tag, prediction in predicted_tags:
@@ -2325,7 +2327,7 @@ class FastSequenceTagger(SequenceTagger):
 					teacher_attention = torch.index_select(language_weight,0,sent_lang_id)
 					teacher_attention = F.softmax(teacher_attention,-1)
 					teacher_features = torch.stack([sentence.get_teacher_prediction(pooling='weighted', weight=teacher_attention[idx]) for idx,sentence in enumerate(batch)],0)
-					
+
 
 					# generate the mask
 					lengths: List[int] = [len(sentence.tokens) for sentence in batch]
