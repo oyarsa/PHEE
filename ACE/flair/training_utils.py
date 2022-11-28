@@ -30,6 +30,8 @@ class Metric(object):
         self._fps = defaultdict(int)
         self._tns = defaultdict(int)
         self._fns = defaultdict(int)
+        self._ems = 0
+        self._total = 0
 
     def add_tp(self, class_name):
         self._tps[class_name] += 1
@@ -42,6 +44,17 @@ class Metric(object):
 
     def add_fn(self, class_name):
         self._fns[class_name] += 1
+
+    def add_em(self, is_exact_match: bool):
+        if is_exact_match:
+            self._ems += 1
+        self._total += 1
+
+    def get_em(self):
+        return self._ems
+
+    def exact_match(self):
+        return self._ems / self._total
 
     def get_tp(self, class_name=None):
         if class_name is None:

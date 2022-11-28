@@ -2195,6 +2195,7 @@ class FastSequenceTagger(SequenceTagger):
 	) -> (Result, float):
 		with torch.no_grad():
 			eval_loss = 0
+			same_len, diff_len = 0, 0
 
 			batch_no: int = 0
 
@@ -2244,8 +2245,10 @@ class FastSequenceTagger(SequenceTagger):
 						predicted_tags = [
 							(tag.tag, str(tag)) for tag in sentence.get_spans("predicted")
 						]
-						if len(gold_tags) != len(predicted_tags):
-							log.warning("gold and predicted lengths differ: %d - %d", len(gold_tags), len(predicted_tags))
+
+						metric.add_em(all(x == y for x, y in zip(gold_tags, predicted_tags)))
+						same_len += sum(1 for x, y in zip(gold_tags, predicted_tags) if len(x) == len(y))
+						diff_len += sum(1 for x, y in zip(gold_tags, predicted_tags) if len(x) != len(y))
 
 						# check for true positives, false positives and false negatives
 						for tag, prediction in predicted_tags:
@@ -2280,9 +2283,12 @@ class FastSequenceTagger(SequenceTagger):
 			# 	with open(out_path, "w", encoding="utf-8") as outfile:
 			# 		outfile.write("".join(lines))
 
+			log.info(">>>> Same length: %d. Different length: %d", same_len, diff_len)
+
 			detailed_result = (
 				f"\nMICRO_AVG: acc {metric.micro_avg_accuracy()} - f1-score {metric.micro_avg_f_score()}"
 				f"\nMACRO_AVG: acc {metric.macro_avg_accuracy()} - f1-score {metric.macro_avg_f_score()}"
+				f"\nEXACT MATCH: {metric.exact_match()}"
 			)
 			for class_name in metric.get_classes():
 				detailed_result += (
@@ -2290,7 +2296,7 @@ class FastSequenceTagger(SequenceTagger):
 					f"fn: {metric.get_fn(class_name)} - tn: {metric.get_tn(class_name)} - precision: "
 					f"{metric.precision(class_name):.4f} - recall: {metric.recall(class_name):.4f} - "
 					f"accuracy: {metric.accuracy(class_name):.4f} - f1-score: "
-					f"{metric.f_score(class_name):.4f}"
+					f"{metric.f_score(class_name):.4f} - exact match: {metric.exact_match()}"
 				)
 
 			result = Result(
