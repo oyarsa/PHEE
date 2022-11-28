@@ -2247,8 +2247,10 @@ class FastSequenceTagger(SequenceTagger):
 						]
 
 						metric.add_em(all(x == y for x, y in zip(gold_tags, predicted_tags)))
-						same_len += sum(1 for x, y in zip(gold_tags, predicted_tags) if len(x) == len(y))
-						diff_len += sum(1 for x, y in zip(gold_tags, predicted_tags) if len(x) != len(y))
+						if len(gold_tags) == len(predicted_tags):
+							same_len += 1
+						else:
+							diff_len += 1
 
 						# check for true positives, false positives and false negatives
 						for tag, prediction in predicted_tags:
