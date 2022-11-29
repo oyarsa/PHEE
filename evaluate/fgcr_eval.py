@@ -1,6 +1,6 @@
 from __future__ import annotations
-import argparse
 
+import argparse
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -9,7 +9,6 @@ from sklearn import metrics
 
 @dataclass
 class Metric:
-    name: str
     precision: float
     recall: float
     f1: float
@@ -17,7 +16,6 @@ class Metric:
 
     def __str__(self) -> str:
         return (
-            f"{self.name}\n"
             f"Precision: {self.precision:.2%}\n"
             f"Recall:    {self.recall:.2%}\n"
             f"F1:        {self.f1:.2%}\n"
@@ -25,7 +23,7 @@ class Metric:
         )
 
 
-def evaluate(gold: list[list[str]], predicted: list[list[str]], name: str) -> Metric:
+def evaluate(gold: list[list[str]], predicted: list[list[str]]) -> Metric:
     """Evaluate labels for F1 and Exact Match
 
     Args:
@@ -51,7 +49,6 @@ def evaluate(gold: list[list[str]], predicted: list[list[str]], name: str) -> Me
     em = exact_match / len(gold)
 
     return Metric(
-        name=name,
         precision=float(p),
         recall=float(r),
         f1=float(f1),
@@ -67,7 +64,7 @@ class Entry:
     prob: float
 
 
-def evaluate_ace(path: Path) -> None:
+def evaluate_ace(path: Path) -> Metric:
     sentences: list[list[Entry]] = []
     sentence: list[Entry] = []
     with open(path) as f:
@@ -81,8 +78,9 @@ def evaluate_ace(path: Path) -> None:
 
     golds = [[e.gold for e in sent] for sent in sentences]
     preds = [[e.pred for e in sent] for sent in sentences]
-    result = evaluate(golds, preds, "BERT - Test")
-    print(result)
+
+    result = evaluate(golds, preds)
+    return result
 
 
 evals = {
