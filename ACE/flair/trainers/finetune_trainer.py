@@ -104,7 +104,7 @@ class ModelFinetuner(ModelDistiller):
 			'CONLL_03_DUTCH_DP': 'CONLL_03_DUTCH_NEW',
 			'CONLL_03_SPANISH_DP': 'CONLL_03_SPANISH_NEW'}
 			for corpus_id in range(len(self.corpus2id)):
-				
+
 				if self.corpus.targets[corpus_id] in same_corpus_mapping:
 					corpus_name = same_corpus_mapping[self.corpus.targets[corpus_id]].lower()+'_'
 				else:
@@ -139,8 +139,8 @@ class ModelFinetuner(ModelDistiller):
 
 			if train_with_doc:
 				self.corpus._train: FlairDataset = ConcatDataset([data for data in self.corpus.train_list])
-				self.corpus._dev: FlairDataset = ConcatDataset([data for data in self.corpus.dev_list])     
-				self.corpus._test: FlairDataset = ConcatDataset([data for data in self.corpus.test_list])       
+				self.corpus._dev: FlairDataset = ConcatDataset([data for data in self.corpus.dev_list])
+				self.corpus._test: FlairDataset = ConcatDataset([data for data in self.corpus.test_list])
 			# for key in pretrained_file_dict:
 			# pdb.set_trace()
 			for embedding in self.model.embeddings.embeddings:
@@ -227,7 +227,7 @@ class ModelFinetuner(ModelDistiller):
 		self.update_params_group=[]
 
 
-		
+
 
 		self.optimizer: torch.optim.Optimizer = optimizer
 		if type(optimizer)==str:
@@ -237,8 +237,8 @@ class ModelFinetuner(ModelDistiller):
 		self.scheduler_state: dict = scheduler_state
 		self.optimizer_state: dict = optimizer_state
 		self.use_tensorboard: bool = use_tensorboard
-		
-		
+
+
 		self.use_bert = False
 		self.bert_tokenizer = None
 		for embedding in self.model.embeddings.embeddings:
@@ -368,7 +368,7 @@ class ModelFinetuner(ModelDistiller):
 			base_path = Path(base_path)
 
 		log_handler = add_file_handler(log, base_path / "training.log")
-		
+
 		log_line(log)
 		log.info(f'Model: "{self.model}"')
 		log_line(log)
@@ -393,7 +393,7 @@ class ModelFinetuner(ModelDistiller):
 
 		# determine what splits (train, dev, test) to evaluate and log
 		if monitor_train:
-			assert 0, 'monitor_train is not supported now!'            
+			assert 0, 'monitor_train is not supported now!'
 		# if train_with_dev:
 		#   assert 0, 'train_with_dev is not supported now!'
 
@@ -439,7 +439,7 @@ class ModelFinetuner(ModelDistiller):
 
 
 		# minimize training loss if training with dev data, else maximize dev score
-		
+
 		# start from here, the train data is a list now
 		train_data = self.corpus.train_list
 		# if self.distill_mode:
@@ -454,7 +454,7 @@ class ModelFinetuner(ModelDistiller):
 			# train_data_teacher = ConcatDataset([self.corpus_teacher.train, self.corpus_teacher.dev])
 			# train_data = ConcatDataset([self.corpus_mixed.train, self.corpus_mixed.dev])
 		if self.distill_mode:
-			
+
 			# coupled_train_data = [CoupleDataset(data,train_data_teacher[index]) for index, data in enumerate(train_data)]
 			coupled_train_data = train_data
 			# faster=True
@@ -468,7 +468,7 @@ class ModelFinetuner(ModelDistiller):
 				log.info(f"Predicting professor prediction")
 				# train_data_teacher = self.corpus_teacher.train_list
 				coupled_train_data=self.assign_pretrained_teacher_predictions(coupled_train_data,self.professors,is_professor=True,faster=faster)
-				
+
 				for professor in self.professors:
 					del professor
 				del self.professors
@@ -476,7 +476,7 @@ class ModelFinetuner(ModelDistiller):
 				train_data=self.assign_pretrained_teacher_targets(coupled_train_data,self.teachers,best_k=best_k)
 			else:
 				train_data=self.assign_pretrained_teacher_predictions(coupled_train_data,self.teachers,faster=faster)
-				
+
 			# if self.ensemble_distill_mode:
 			#   log.info(f"Ensembled distillation mode")
 			#   coupled_train_data = ConcatDataset(coupled_train_data)
@@ -513,7 +513,7 @@ class ModelFinetuner(ModelDistiller):
 		#   shuffle = False
 
 		if not fine_tune_mode:
-			
+
 			if self.model.tag_type in dependency_tasks:
 				scheduler = ExponentialLR(optimizer, decay**(1/decay_steps))
 			else:
@@ -551,7 +551,7 @@ class ModelFinetuner(ModelDistiller):
 		# At any point you can hit Ctrl + C to break out of training early.
 		best_score=0
 		interpolation=1
-		
+
 		if fine_tune_mode:
 			pass
 		else:
@@ -612,9 +612,9 @@ class ModelFinetuner(ModelDistiller):
 				if shuffle:
 					batch_loader.reshuffle()
 				if true_reshuffle:
-					
+
 					batch_loader.true_reshuffle()
-					
+
 					batch_loader.assign_tags(self.model.tag_type,self.model.tag_dictionary)
 					if self.distill_mode:
 						batch_loader=self.resort(batch_loader,is_crf=self.model.distill_crf, is_posterior = self.model.distill_posterior, is_token_att = self.model.token_level_attention)
@@ -643,7 +643,7 @@ class ModelFinetuner(ModelDistiller):
 
 
 				log.info("Current loss interpolation: "+ str(interpolation))
-				
+
 				name_list=sorted([x.name for x in self.model.embeddings.embeddings])
 				print(name_list)
 				for batch_no, student_input in enumerate(batch_loader):
@@ -664,15 +664,15 @@ class ModelFinetuner(ModelDistiller):
 
 					try:
 						if self.distill_mode:
-							
-							
+
+
 							loss = self.model.simple_forward_distillation_loss(student_input, interpolation = interpolation, train_with_professor=self.train_with_professor)
 						else:
 							loss = self.model.forward_loss(student_input)
 
 						if self.model.use_decoder_timer:
 							decode_time=time.time() - self.model.time
-						
+
 						# Backward
 						if batch_no >= total_number_of_batches//gradient_accumulation_steps * gradient_accumulation_steps:
 							# only accumulate the rest of batch
@@ -705,14 +705,14 @@ class ModelFinetuner(ModelDistiller):
 						if (fine_tune_mode or self.model.tag_type in dependency_tasks):
 							scheduler.step()
 
-					
+
 					if batch_no % modulo == 0:
 						if self.model.use_decoder_timer:
 							log.info(
 								f"epoch {epoch + 1} - iter {batch_no}/{total_number_of_batches} - loss "
 								f"{train_loss / (seen_batches) * gradient_accumulation_steps:.8f} - samples/sec: {total_sent / batch_time:.2f} - decode_sents/sec: {total_sent / decode_time:.2f}"
 							)
-							
+
 						else:
 							log.info(
 								f"epoch {epoch + 1} - iter {batch_no}/{total_number_of_batches} - loss "
@@ -763,7 +763,7 @@ class ModelFinetuner(ModelDistiller):
 				log_line(log)
 				if log_dev:
 					if macro_avg:
-						
+
 						if type(self.corpus) is ListCorpus:
 							result_dict={}
 							loss_list=[]
@@ -782,14 +782,22 @@ class ModelFinetuner(ModelDistiller):
 								loss_list.append(dev_loss)
 								# log.info(current_result.log_line)
 								# log.info(current_result.detailed_results)
+
 						else:
 							assert 0, 'not defined!'
 						mavg=sum(result_dict.values())/len(result_dict)
 						log.info('Macro Average: '+f'{mavg:.2f}'+'\tMacro avg loss: ' + f'{((sum(loss_list)/len(loss_list)).item()):.2f}' +  print_sent)
 						dev_score_history.append(mavg)
 						dev_loss_history.append((sum(loss_list)/len(loss_list)).item())
-						
+
 						current_score = mavg
+
+						if self.use_tensorboard:
+							mavg_loss = ((sum(loss_list)/len(loss_list)).item())
+							writer.add_scalar("dev_loss", mavg_loss, epoch + 1)
+							writer.add_scalar(
+								"dev_score", mavg, epoch + 1
+							)
 					else:
 						dev_eval_result, dev_loss = self.model.evaluate(
 							dev_loader,
@@ -805,14 +813,14 @@ class ModelFinetuner(ModelDistiller):
 						dev_loss_history.append(dev_loss)
 
 						current_score = dev_eval_result.main_score
+						if self.use_tensorboard:
+							writer.add_scalar("dev_loss", dev_loss, epoch + 1)
+							writer.add_scalar(
+								"dev_score", dev_eval_result.main_score, epoch + 1
+							)
 					# depending on memory mode, embeddings are moved to CPU, GPU or deleted
 					store_embeddings(self.corpus.dev, embeddings_storage_mode)
 
-					if self.use_tensorboard:
-						writer.add_scalar("dev_loss", dev_loss, epoch + 1)
-						writer.add_scalar(
-							"dev_score", dev_eval_result.main_score, epoch + 1
-						)
 				log_line(log)
 				if log_test:
 					test_eval_result, test_loss = self.model.evaluate(
@@ -862,7 +870,7 @@ class ModelFinetuner(ModelDistiller):
 				# determine learning rate annealing through scheduler
 				if not fine_tune_mode and self.model.tag_type not in dependency_tasks:
 					scheduler.step(current_score)
-				
+
 				if current_score>best_score:
 					best_score=current_score
 					bad_epochs2=0
@@ -924,7 +932,7 @@ class ModelFinetuner(ModelDistiller):
 
 				# if checkpoint is enable, save model at each epoch
 				if checkpoint and not param_selection_mode:
-					
+
 					self.model.save_checkpoint(
 						base_path / "checkpoint.pt",
 						optimizer.state_dict(),
@@ -939,13 +947,13 @@ class ModelFinetuner(ModelDistiller):
 					and not param_selection_mode
 					and current_score == best_score
 				):
-					log.info(f"==================Saving the current best model: {current_score}==================") 
+					log.info(f"==================Saving the current best model: {current_score}==================")
 					self.model.save(base_path / "best-model.pt")
 					if save_finetuned_embedding:
 						# pdb.set_trace()
-						log.info(f"==================Saving the best language model: {current_score}==================") 
+						log.info(f"==================Saving the best language model: {current_score}==================")
 						for embedding in self.model.embeddings.embeddings:
-							if hasattr(embedding,'fine_tune') and embedding.fine_tune: 
+							if hasattr(embedding,'fine_tune') and embedding.fine_tune:
 								if not os.path.exists(base_path/embedding.name.split('/')[-1]):
 									os.mkdir(base_path/embedding.name.split('/')[-1])
 								embedding.tokenizer.save_pretrained(base_path/embedding.name.split('/')[-1])
@@ -957,9 +965,9 @@ class ModelFinetuner(ModelDistiller):
 				self.model.save(base_path / "final-model.pt")
 				if save_finetuned_embedding and train_with_dev:
 					# pdb.set_trace()
-					log.info(f"==================Saving the best language model: {current_score}==================") 
+					log.info(f"==================Saving the best language model: {current_score}==================")
 					for embedding in self.model.embeddings.embeddings:
-						if hasattr(embedding,'fine_tune') and embedding.fine_tune: 
+						if hasattr(embedding,'fine_tune') and embedding.fine_tune:
 							if not os.path.exists(base_path/embedding.name.split('/')[-1]):
 								os.mkdir(base_path/embedding.name.split('/')[-1])
 							embedding.tokenizer.save_pretrained(base_path/embedding.name.split('/')[-1])
@@ -1074,7 +1082,7 @@ class ModelFinetuner(ModelDistiller):
 					for idx, sentence in enumerate(teacher_input):
 						# if hasattr(sentence,'_teacher_target'):
 						#   assert 0, 'The sentence has been filled with teacher target!'
-						
+
 						if not faster:
 							if self.model.tag_type=="dependency":
 								if self.model.distill_factorize:
@@ -1088,7 +1096,7 @@ class ModelFinetuner(ModelDistiller):
 					del logits
 					# res_input+=student_input
 					# store_embeddings(teacher_input, "none")
-					
+
 				# del teacher
 			teacher = teacher.to('cpu')
 		end_time=time.time()
@@ -1251,7 +1259,7 @@ class ModelFinetuner(ModelDistiller):
 									# temp_var = backward_var[range(forward_var.shape[0]), 0, :]
 									# terminal_var = temp_var + teacher.transitions[:,teacher.tag_dictionary.get_idx_for_item(START_TAG)][None,:]
 									# forward_backward_score.logsumexp(-1)
-						
+
 					for idx, sentence in enumerate(teacher_input):
 						# if hasattr(sentence,'_teacher_target'):
 						#   assert 0, 'The sentence has been filled with teacher target!'
@@ -1287,7 +1295,7 @@ class ModelFinetuner(ModelDistiller):
 					targets=posteriors.copy()
 				except:
 					pdb.set_trace()
-			
+
 			if is_token_att:
 				sentfeats=[x._teacher_sentfeats for x in batch]
 				sentfeats_lens=[len(x[0]) for x in sentfeats]
@@ -1308,7 +1316,7 @@ class ModelFinetuner(ModelDistiller):
 
 			if is_posterior:
 				assert posterior_lens==lens, 'lengths of two targets not match'
-			
+
 			if max(lens)>min(lens) or max(sent_lens)!=max(lens) or (is_posterior and self.model.tag_type=='dependency'):
 				# if max(sent_lens)!=max(lens):
 				max_shape=max(sent_lens)
@@ -1321,7 +1329,7 @@ class ModelFinetuner(ModelDistiller):
 					new_ends=[]
 					if is_posterior:
 						post_vals=posteriors[index]
-					
+
 					if is_token_att:
 						sentfeats_vals=sentfeats[index]
 					for idx, val in enumerate(target):
@@ -1374,7 +1382,7 @@ class ModelFinetuner(ModelDistiller):
 							if is_posterior:
 								bias = 0
 								# pdb.set_trace()
-								
+
 								# if max_shape - bias == 0:
 								# pdb.set_trace()
 								# if sent_lens[index] == 1:
@@ -1385,15 +1393,15 @@ class ModelFinetuner(ModelDistiller):
 								new_posterior[:sent_lens[index]-bias]=post_val[:sent_lens[index]-bias]
 								new_posteriors.append(new_posterior)
 							# pdb.set_trace()
-							
-							
+
+
 					if is_crf:
 						batch[index]._teacher_target=new_targets
 						if hasattr(self.model,'distill_rel') and  self.model.distill_rel:
 							batch[index]._teacher_rel_target=new_rel_targets
 					if is_posterior:
 						batch[index]._teacher_posteriors=new_posteriors
-					
+
 					if is_token_att:
 						batch[index]._teacher_sentfeats=new_sentfeats
 					if (not is_crf and not is_posterior):
@@ -1410,7 +1418,7 @@ class ModelFinetuner(ModelDistiller):
 					# posteriors = batch.teacher_features['posteriors']
 					# if max(lens) == posteriors.shape[-1]:
 					#   pdb.set_trace()
-				
+
 				if (not is_crf and not is_posterior):
 					batch.teacher_features['distributions'] = torch.stack([sentence.get_teacher_prediction() for sentence in batch],0).cpu()
 					if hasattr(self.model, 'distill_factorize') and self.model.distill_factorize:
@@ -1441,7 +1449,7 @@ class ModelFinetuner(ModelDistiller):
 			for batch in loader:
 				total_length+=len(batch)
 				lengths1 = torch.Tensor([len(sentence.tokens) for sentence in batch])
-				
+
 
 				max_len = max(lengths1)
 				mask=self.model.sequence_mask(lengths1, max_len).unsqueeze(-1).cuda().long()
@@ -1457,11 +1465,11 @@ class ModelFinetuner(ModelDistiller):
 				# log_prob=torch.log(fwbw_probability+1e-12)
 
 				# for current_idx,best_k in enumerate(range(min_k,max_k)):
-				
+
 				#     path_score, decode_idx=self.model._viterbi_decode_nbest(logits,mask,best_k)
 
-				#     
-					
+				#
+
 				#     tag_distribution = torch.zeros(fwbw_probability.shape).type_as(fwbw_probability)
 				#     weighted_tag_distribution = torch.zeros(fwbw_probability.shape).type_as(fwbw_probability)
 				#     for k in range(best_k):
@@ -1470,26 +1478,26 @@ class ModelFinetuner(ModelDistiller):
 				#             weighted_tag_distribution[batch_range,i,decode_idx[:,i,k]]+=path_score[:,k]
 				#     tag_distribution=tag_distribution/tag_distribution.sum(-1,keepdim=True)
 				#     weighted_tag_distribution=weighted_tag_distribution/weighted_tag_distribution.sum(-1,keepdim=True)
-					
+
 
 				#     XE[current_idx]+=((log_prob*tag_distribution*mask.float()).sum(-1).sum(-1)/(mask.float().sum(-1).sum(-1)*tag_distribution.shape[-1])).sum()
 				#     weighted_XE[current_idx]+=((log_prob*weighted_tag_distribution*mask.float()).sum(-1).sum(-1)/(mask.float().sum(-1).sum(-1)*weighted_tag_distribution.shape[-1])).sum()
 				#     if best_k==min_k or best_k==max_k-1:
 				#         pdb.set_trace()
-					
+
 			pdb.set_trace()
 			print(total)
 			print(total_tp)
 			# print('XE: ',XE)
 			# print('weighted_XE: ',weighted_XE)
 			# print('total_length: ',total_length)
-		
+
 	def final_test(
 		self, base_path: Path, eval_mini_batch_size: int, num_workers: int = 8, overall_test: bool = True, quiet_mode: bool = False, nocrf: bool = False, predict_posterior: bool = False, debug: bool = False, keep_embedding: int = -1, sort_data=False,
 	):
 
 		log_line(log)
-		
+
 
 		self.model.eval()
 		if quiet_mode:
@@ -1529,7 +1537,7 @@ class ModelFinetuner(ModelDistiller):
 					embedding.tokenizer = AutoTokenizer.from_pretrained(temp_name)
 			if hasattr(embedding,'model') and hasattr(embedding.model,'encoder') and not hasattr(embedding.model.encoder,'config'):
 				embedding.model.encoder.config = embedding.model.config
-		
+
 		if overall_test:
 			loader=ColumnDataLoader(list(self.corpus.test),eval_mini_batch_size, use_bert=self.use_bert,tokenizer=self.bert_tokenizer, model = self.model, sentence_level_batch = self.sentence_level_batch, sort_data=sort_data)
 			loader.assign_tags(self.model.tag_type,self.model.tag_dictionary)
@@ -1678,7 +1686,7 @@ class ModelFinetuner(ModelDistiller):
 		print('Batch Size: ', mini_batch_size)
 		step = 0
 		while step < iterations:
-			batch_loader=ColumnDataLoader(list(train_data),mini_batch_size,use_bert=self.use_bert,tokenizer=self.bert_tokenizer)            
+			batch_loader=ColumnDataLoader(list(train_data),mini_batch_size,use_bert=self.use_bert,tokenizer=self.bert_tokenizer)
 			# batch_loader = DataLoader(
 			#     train_data, batch_size=mini_batch_size, shuffle=True
 			# )
@@ -1740,4 +1748,3 @@ class ModelFinetuner(ModelDistiller):
 	def get_subtoken_length(self,sentence):
 		return len(self.model.embeddings.embeddings[0].tokenizer.tokenize(sentence.to_tokenized_string()))
 
-	

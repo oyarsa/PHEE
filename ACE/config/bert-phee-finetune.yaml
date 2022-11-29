@@ -1,6 +1,7 @@
 ModelFinetuner:
   distill_mode: false
   sentence_level_batch: true
+  use_tensorboard: true
 anneal_factor: 2
 embeddings:
   BertEmbeddings-0:

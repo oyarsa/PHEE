@@ -6,6 +6,7 @@ ReinforcementTrainer:
   distill_mode: false
   optimizer: SGD
   sentence_level_batch: true
+  use_tensorboard: true
 embeddings:
   TransformerWordEmbeddings-1:
     model: ./resources/taggers/en-bert_fgcr_finetune/bert-base-cased
