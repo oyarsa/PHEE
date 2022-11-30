@@ -17,7 +17,7 @@ import copy
 from flair.parser.utils.alg import crf
 import h5py
 from flair.models.controller import EmbedController
-import numpy as np 
+import numpy as np
 import json
 
 import gc
@@ -125,7 +125,7 @@ class ReinforcementTrainer(ModelDistiller):
 			'CONLL_03_DUTCH_DP': 'CONLL_03_DUTCH_NEW',
 			'CONLL_03_SPANISH_DP': 'CONLL_03_SPANISH_NEW'}
 			for corpus_id in range(len(self.corpus2id)):
-				
+
 				if self.corpus.targets[corpus_id] in same_corpus_mapping:
 					corpus_name = same_corpus_mapping[self.corpus.targets[corpus_id]].lower()+'_'
 				else:
@@ -160,8 +160,8 @@ class ReinforcementTrainer(ModelDistiller):
 
 			if train_with_doc:
 				self.corpus._train: FlairDataset = ConcatDataset([data for data in self.corpus.train_list])
-				self.corpus._dev: FlairDataset = ConcatDataset([data for data in self.corpus.dev_list])		
-				self.corpus._test: FlairDataset = ConcatDataset([data for data in self.corpus.test_list])		
+				self.corpus._dev: FlairDataset = ConcatDataset([data for data in self.corpus.dev_list])
+				self.corpus._test: FlairDataset = ConcatDataset([data for data in self.corpus.test_list])
 			# for key in pretrained_file_dict:
 			# pdb.set_trace()
 			for embedding in self.model.embeddings.embeddings:
@@ -214,7 +214,7 @@ class ReinforcementTrainer(ModelDistiller):
 
 		# self.corpus = self.assign_pretrained_teacher_predictions(self.corpus,self.corpus_teacher,self.teachers)
 		self.update_params_group=[]
-		
+
 		self.optimizer: torch.optim.Optimizer = optimizer
 		if type(optimizer)==str:
 			self.optimizer = getattr(torch.optim,optimizer)
@@ -229,7 +229,7 @@ class ReinforcementTrainer(ModelDistiller):
 		self.scheduler_state: dict = scheduler_state
 		self.optimizer_state: dict = optimizer_state
 		self.use_tensorboard: bool = use_tensorboard
-		
+
 		self.config = config
 		self.use_bert = False
 		self.bert_tokenizer = None
@@ -265,8 +265,8 @@ class ReinforcementTrainer(ModelDistiller):
 					else:
 						pass
 			self.corpus._train: FlairDataset = ConcatDataset([data for data in self.corpus.train_list])
-			self.corpus._dev: FlairDataset = ConcatDataset([data for data in self.corpus.dev_list])		
-			self.corpus._test: FlairDataset = ConcatDataset([data for data in self.corpus.test_list])		
+			self.corpus._dev: FlairDataset = ConcatDataset([data for data in self.corpus.dev_list])
+			self.corpus._test: FlairDataset = ConcatDataset([data for data in self.corpus.test_list])
 
 
 
@@ -384,7 +384,7 @@ class ReinforcementTrainer(ModelDistiller):
 			base_path = Path(base_path)
 
 		log_handler = add_file_handler(log, base_path / "training.log")
-		
+
 		log_line(log)
 		log.info(f'Model: "{self.model}"')
 		log_line(log)
@@ -409,7 +409,7 @@ class ReinforcementTrainer(ModelDistiller):
 
 		# determine what splits (train, dev, test) to evaluate and log
 		if monitor_train:
-			assert 0, 'monitor_train is not supported now!'            
+			assert 0, 'monitor_train is not supported now!'
 		# if train_with_dev:
 		#   assert 0, 'train_with_dev is not supported now!'
 
@@ -429,7 +429,7 @@ class ReinforcementTrainer(ModelDistiller):
 		controller_optimizer: torch.optim.Optimizer = self.controller_optimizer(
 			self.controller.parameters(), lr=self.controller_learning_rate, momentum = controller_momentum
 		)
-		
+
 		if continue_training:
 			# though this is not the final model of training, but we use this currently to save the space
 			if (base_path / "best-model.pt").exists():
@@ -452,10 +452,10 @@ class ReinforcementTrainer(ModelDistiller):
 		finetune_params=[param for name,param in self.model.named_parameters() if 'embedding' in name or name=='linear.weight' or name=='linear.bias']
 		other_params=[param for name,param in self.model.named_parameters() if 'embedding' not in name and name !='linear.weight' and name !='linear.bias']
 		# other_params = {name:param for name,param in self.model.named_parameters() if 'embeddings' not in name}
-		
+
 
 		# minimize training loss if training with dev data, else maximize dev score
-		
+
 		# start from here, the train data is a list now
 
 
@@ -464,7 +464,7 @@ class ReinforcementTrainer(ModelDistiller):
 			train_data = [ConcatDataset([train, self.corpus.dev_list[index]]) for index, train in enumerate(self.corpus.train_list)]
 		batch_loader=ColumnDataLoader(ConcatDataset(train_data),mini_batch_size,shuffle,use_bert=self.use_bert,tokenizer=self.bert_tokenizer, model = self.model, sentence_level_batch = self.sentence_level_batch)
 		batch_loader.assign_tags(self.model.tag_type,self.model.tag_dictionary)
-		
+
 		if not train_with_dev:
 			if macro_avg:
 
@@ -483,7 +483,7 @@ class ReinforcementTrainer(ModelDistiller):
 				dev_loader.assign_tags(self.model.tag_type,self.model.tag_dictionary)
 				test_loader=ColumnDataLoader(list(self.corpus.test),eval_mini_batch_size,use_bert=self.use_bert,tokenizer=self.bert_tokenizer, sort_data=sort_data, model = self.model, sentence_level_batch = self.sentence_level_batch)
 				test_loader.assign_tags(self.model.tag_type,self.model.tag_dictionary)
-		
+
 		### Finetune Scheduler
 		if freezing:
 			for embedding in self.model.embeddings.embeddings:
@@ -496,13 +496,13 @@ class ReinforcementTrainer(ModelDistiller):
 		if self.n_gpu > 1:
 			self.model = torch.nn.DataParallel(self.model)
 
-		
+
 		score_list=[]
-		
+
 		name_list=sorted([x.name for x in self.model.embeddings.embeddings])
 		# for faster quit training, use larger anneal factor to quitting
 		min_learning_rate = learning_rate/1000
-		
+
 		curriculum=[]
 		if curriculum_file is not None:
 			with open(curriculum_file) as f:
@@ -516,7 +516,7 @@ class ReinforcementTrainer(ModelDistiller):
 			else:
 				self.gpu_friendly_assign_embedding([batch_loader,dev_loader,test_loader])
 		# pdb.set_trace()
-		
+
 		try:
 			for episode in range(start_episode,max_episodes):
 				best_score=0
@@ -572,8 +572,8 @@ class ReinforcementTrainer(ModelDistiller):
 						)
 
 				if self.scheduler_state is not None:
-					scheduler.load_state_dict(self.scheduler_state) 
-				
+					scheduler.load_state_dict(self.scheduler_state)
+
 
 
 
@@ -605,7 +605,7 @@ class ReinforcementTrainer(ModelDistiller):
 					print(action)
 					print(self.controller(None))
 					self.model.selection=action
-			
+
 				previous_learning_rate = learning_rate
 				training_order = None
 				bad_epochs2=0
@@ -650,11 +650,11 @@ class ReinforcementTrainer(ModelDistiller):
 					if shuffle:
 						batch_loader.reshuffle()
 					if true_reshuffle:
-						
+
 						batch_loader.true_reshuffle()
-						
+
 						batch_loader.assign_tags(self.model.tag_type,self.model.tag_dictionary)
-						
+
 					self.model.train()
 					self.controller.train()
 					# TODO: check teacher parameters fixed and with eval() mode
@@ -670,19 +670,19 @@ class ReinforcementTrainer(ModelDistiller):
 					# process mini-batches
 					batch_time = 0
 					total_sent=0
-					
-					
+
+
 					for batch_no, student_input in enumerate(batch_loader):
 						# for group in optimizer.param_groups:
 						#   temp_lr = group["lr"]
 						# log.info('lr: '+str(temp_lr))
 						# print(self.language_weight.softmax(1))
 						# print(self.biaffine.U)
-						
+
 						start_time = time.time()
 						total_sent+=len(student_input)
 						try:
-							
+
 							loss = self.model.forward_loss(student_input)
 
 							if self.model.use_decoder_timer:
@@ -722,7 +722,7 @@ class ReinforcementTrainer(ModelDistiller):
 							#       f"epoch {epoch + 1} - iter {batch_no}/{total_number_of_batches} - loss "
 							#       f"{train_loss / seen_batches:.8f} - samples/sec: {total_sent / batch_time:.2f} - decode_sents/sec: {total_sent / decode_time:.2f}"
 							#   )
-								
+
 							# else:
 							#   log.info(
 							#       f"epoch {epoch + 1} - iter {batch_no}/{total_number_of_batches} - loss "
@@ -764,15 +764,15 @@ class ReinforcementTrainer(ModelDistiller):
 						store_embeddings(self.corpus.train, embeddings_storage_mode)
 						if embeddings_storage_mode == "none" and hasattr(self.corpus.train,'features'):
 							del self.corpus.train.features
-					log.info(f"==================Evaluating development set==================") 
+					log.info(f"==================Evaluating development set==================")
 					if log_dev:
 						if macro_avg:
-							
+
 							if type(self.corpus) is ListCorpus:
 								result_dict={}
 								loss_list=[]
 								print_sent='\n'
-								
+
 								for index, loader in enumerate(dev_loaders):
 									if len(loader) == 0:
 										continue
@@ -793,8 +793,15 @@ class ReinforcementTrainer(ModelDistiller):
 							log.info('Macro Average: '+f'{mavg:.2f}'+'\tMacro avg loss: ' + f'{((sum(loss_list)/len(loss_list)).item()):.2f}' +  print_sent)
 							dev_score_history.append(mavg)
 							dev_loss_history.append((sum(loss_list)/len(loss_list)).item())
-							
+
 							current_score = mavg
+
+							if self.use_tensorboard:
+								mavg_loss = ((sum(loss_list)/len(loss_list)).item())
+								writer.add_scalar("dev_loss", mavg_loss, epoch + 1)
+								writer.add_scalar(
+									"dev_score", mavg, epoch + 1
+								)
 						else:
 							dev_eval_result, dev_loss = self.model.evaluate(
 								dev_loader,
@@ -810,22 +817,23 @@ class ReinforcementTrainer(ModelDistiller):
 							dev_loss_history.append(dev_loss)
 
 							current_score = dev_eval_result.main_score
+							if self.use_tensorboard:
+								writer.add_scalar("dev_loss", dev_loss, epoch + 1)
+								writer.add_scalar(
+									"dev_score", dev_eval_result.main_score, epoch + 1
+								)
+
 						# depending on memory mode, embeddings are moved to CPU, GPU or deleted
 						store_embeddings(self.corpus.dev, embeddings_storage_mode)
 						if embeddings_storage_mode == "none" and hasattr(self.corpus.dev,'features'):
 							del self.corpus.dev.features
-						if self.use_tensorboard:
-							writer.add_scalar("dev_loss", dev_loss, epoch + 1)
-							writer.add_scalar(
-								"dev_score", dev_eval_result.main_score, epoch + 1
-							)
 
 
 					if current_score>=baseline_score:
-						log.info(f"==================Evaluating test set==================")    
+						log.info(f"==================Evaluating test set==================")
 						pdb.set_trace()
 						if macro_avg:
-							
+
 							if type(self.corpus) is ListCorpus:
 								result_dict={}
 								loss_list=[]
@@ -850,6 +858,12 @@ class ReinforcementTrainer(ModelDistiller):
 							log.info('Test Average: '+f'{mavg:.2f}'+'\tTest avg loss: ' + f'{((sum(loss_list)/len(loss_list)).item()):.2f}' +  print_sent)
 							test_score_history.append(mavg)
 							test_loss_history.append((sum(loss_list)/len(loss_list)).item())
+							if self.use_tensorboard:
+								mavg_loss = ((sum(loss_list)/len(loss_list)).item())
+								writer.add_scalar("test_loss", mavg_loss, epoch + 1)
+								writer.add_scalar(
+									"test_score", mavg, epoch + 1
+								)
 						else:
 							test_eval_result, test_loss = self.model.evaluate(
 								test_loader,
@@ -863,16 +877,16 @@ class ReinforcementTrainer(ModelDistiller):
 							# append test score to score history
 							test_score_history.append(test_eval_result.main_score)
 							test_loss_history.append(test_loss)
+							if self.use_tensorboard:
+								writer.add_scalar("test_loss", test_loss, epoch + 1)
+								writer.add_scalar(
+									"test_score", test_eval_result.main_score, epoch + 1
+								)
 
 						# depending on memory mode, embeddings are moved to CPU, GPU or deleted
 						store_embeddings(self.corpus.test, embeddings_storage_mode)
 						if embeddings_storage_mode == "none" and hasattr(self.corpus.test,'features'):
 							del self.corpus.test.features
-						if self.use_tensorboard:
-							writer.add_scalar("test_loss", test_loss, epoch + 1)
-							writer.add_scalar(
-								"test_score", test_eval_result.main_score, epoch + 1
-							)
 
 
 					# determine learning rate annealing through scheduler
@@ -924,20 +938,20 @@ class ReinforcementTrainer(ModelDistiller):
 						and not param_selection_mode
 						and current_score >= baseline_score
 					):
-						log.info(f"==================Saving the current overall best model: {current_score}==================") 
+						log.info(f"==================Saving the current overall best model: {current_score}==================")
 						if self.n_gpu>1:
 							self.model.module.save(base_path / "best-model.pt")
 						else:
 							self.model.save(base_path / "best-model.pt")
 							self.controller.save(base_path/ "controller.pt")
 						baseline_score = current_score
-						
+
 
 				# if we do not use dev data for model selection, save final model
 				# if save_final_model and not param_selection_mode:
 				#   self.model.save(base_path / "final-model.pt")
 
-				# pdb.set_trace()               
+				# pdb.set_trace()
 				log.info(
 					f"================================== End episode {episode + 1} =================================="
 				)
@@ -987,7 +1001,7 @@ class ReinforcementTrainer(ModelDistiller):
 						# reward = best_score-baseline_score
 						controller_loss = 0
 						# pdb.set_trace()
-						action_count = 0 
+						action_count = 0
 						average_reward = 0
 						reward_at_each_position = torch.zeros_like(action)
 						count_at_each_position = torch.zeros_like(action)
@@ -1034,7 +1048,7 @@ class ReinforcementTrainer(ModelDistiller):
 							print(self.controller.selector)
 							print("#=================")
 							# pdb.set_trace()
-						
+
 						log.info(f"After distributions: ")
 						print(self.controller(None))
 						# pdb.set_trace()
@@ -1043,7 +1057,7 @@ class ReinforcementTrainer(ModelDistiller):
 							self.best_action = action
 							self.controller.best_action = action
 							log.info(f"Setting baseline score to: {baseline_score}")
-							log.info(f"Setting baseline action to: {self.best_action}") 
+							log.info(f"Setting baseline action to: {self.best_action}")
 
 						log.info('=============================================')
 						log.info(f"Current Action: {action}")
@@ -1055,7 +1069,7 @@ class ReinforcementTrainer(ModelDistiller):
 						log.info(f"Overall best score: {baseline_score}")
 						log.info(f"State dictionary: {self.action_dict}")
 						log.info('=============================================')
-						
+
 					# pdb.set_trace()
 					curr_action = tuple(action.cpu().tolist())
 					if curr_action not in self.action_dict:
@@ -1144,10 +1158,10 @@ class ReinforcementTrainer(ModelDistiller):
 		lang_dict = {}
 		distr_dict = {}
 		for batch_no, sentences in enumerate(data_loader):
-			
+
 			lengths: List[int] = [len(sentence.tokens) for sentence in sentences]
 			longest_token_sequence_in_batch: int = max(lengths)
-			
+
 			self.model.embeddings.embed(sentences)
 			sentence_tensor = torch.cat([sentences.features[x].to(flair.device) for x in sorted(sentences.features.keys())],-1)
 			mask=self.model.sequence_mask(torch.tensor(lengths),longest_token_sequence_in_batch).to(flair.device).type_as(sentence_tensor)
@@ -1174,7 +1188,7 @@ class ReinforcementTrainer(ModelDistiller):
 						# selection[idx] = m_temp.sample()
 
 				selection = selection.to('cpu')
-			
+
 			if first_episode:
 				selection = torch.ones_like(selection)
 
@@ -1203,7 +1217,7 @@ class ReinforcementTrainer(ModelDistiller):
 					distr_dict[sentence.lang_id] = []
 				lang_dict[sentence.lang_id].append(selection[sent_id])
 				distr_dict[sentence.lang_id].append(distribution[sent_id])
-			
+
 
 		# pdb.set_trace()
 		for lang_id in lang_dict:
@@ -1217,7 +1231,7 @@ class ReinforcementTrainer(ModelDistiller):
 	#   for embedding in self.model.embeddings.embeddings:
 	#       if ('WordEmbeddings' not in embedding.__class__.__name__ and 'Char' not in embedding.__class__.__name__ and 'Lemma' not in embedding.__class__.__name__ and 'POS' not in embedding.__class__.__name__) and not (hasattr(embedding,'fine_tune') and embedding.fine_tune):
 	#           print(embedding.name, count_parameters(embedding))
-	#           # 
+	#           #
 	#           embedding.to(flair.device)
 	#           for loader in loaders:
 	#               for sentences in loader:
@@ -1232,7 +1246,7 @@ class ReinforcementTrainer(ModelDistiller):
 	#           embedding=embedding.to(flair.device)
 	#   # torch.cuda.empty_cache()
 	#   log.info("Finished Embeddings Assignments")
-	#   return 
+	#   return
 	# def assign_predicted_embeddings(self,doc_dict,embedding,file_name):
 	#   # torch.cuda.empty_cache()
 	#   lm_file = h5py.File(file_name, "r")
@@ -1248,7 +1262,7 @@ class ReinforcementTrainer(ModelDistiller):
 	#       group = lm_file[key]
 	#       num_sentences = len(list(group.keys()))
 	#       sentences_emb = [group[str(i)][...] for i in range(num_sentences)]
-	#       try: 
+	#       try:
 	#           assert len(doc_dict[key])==len(sentences_emb)
 	#       except:
 	#           pdb.set_trace()
@@ -1261,8 +1275,8 @@ class ReinforcementTrainer(ModelDistiller):
 	#           store_embeddings([sentence], 'cpu')
 	#       # for idx, sentence in enumerate(doc_dict[key]):
 	#   log.info("Loaded predicted embeddings: "+file_name)
-	#   return 
-	
+	#   return
+
 	def resort(self,loader,is_crf=False, is_posterior=False, is_token_att=False):
 		for batch in loader:
 			if is_posterior:
@@ -1292,7 +1306,7 @@ class ReinforcementTrainer(ModelDistiller):
 
 			if is_posterior:
 				assert posterior_lens==lens, 'lengths of two targets not match'
-			
+
 			if max(lens)>min(lens) or max(sent_lens)!=max(lens) or (is_posterior and self.model.tag_type=='dependency'):
 				# if max(sent_lens)!=max(lens):
 				max_shape=max(sent_lens)
@@ -1358,7 +1372,7 @@ class ReinforcementTrainer(ModelDistiller):
 								new_posterior=torch.zeros(shape).type_as(post_val)
 								new_posterior[:sent_lens[index]]=post_val[:sent_lens[index]]
 								new_posteriors.append(new_posterior)
-							
+
 					if is_crf:
 						batch[index]._teacher_target=new_targets
 						if hasattr(self.model,'distill_rel') and  self.model.distill_rel:
@@ -1390,7 +1404,7 @@ class ReinforcementTrainer(ModelDistiller):
 						batch.teacher_features['topk_rels']=torch.stack([sentence.get_teacher_rel_target() for sentence in batch],0).cpu()
 		return loader
 	def assign_corpus(self, corpus, set_name = 'test_', corpus_name = 'CONLL_03_ENGLISH', train_with_doc = True, pretrained_file_dict: dict = {}
-	):	
+	):
 		doc_sentence_dict = {}
 		doc_sentence_dict = self.assign_documents(corpus, set_name, doc_sentence_dict, corpus_name, train_with_doc)
 		new_sentences=[]
@@ -1400,7 +1414,7 @@ class ReinforcementTrainer(ModelDistiller):
 			new_sentences.append(sentence)
 		corpus.sentences = new_sentences.copy()
 		corpus.reset_sentence_count
-			
+
 		for embedding in self.model.embeddings.embeddings:
 			if embedding.name in pretrained_file_dict:
 				self.assign_predicted_embeddings(doc_sentence_dict,embedding,pretrained_file_dict[embedding.name])
@@ -1411,7 +1425,7 @@ class ReinforcementTrainer(ModelDistiller):
 	):
 
 		log_line(log)
-		
+
 
 		self.model.eval()
 		self.model.to('cpu')
@@ -1434,7 +1448,7 @@ class ReinforcementTrainer(ModelDistiller):
 				training_state = torch.load(base_path/'training_state.pt')
 				self.best_action = training_state['best_action']
 				self.model.selection=self.best_action
-			
+
 				log.info(f"Setting embedding mask to the best action: {self.best_action}")
 				print(name_list)
 		except:
