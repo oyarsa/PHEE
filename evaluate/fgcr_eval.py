@@ -61,7 +61,7 @@ class Entry:
     token: str
     gold: str
     pred: str
-    prob: float
+    # prob: float
 
 
 def evaluate_ace(path: Path) -> Metric:
@@ -73,8 +73,8 @@ def evaluate_ace(path: Path) -> Metric:
                 sentences.append(sentence)
                 sentence = []
             else:
-                token, gold, pred, prob = line.split()
-                sentence.append(Entry(token, gold, pred, float(prob)))
+                token, gold, pred, *_ = line.split()
+                sentence.append(Entry(token, gold, pred))
 
     golds = [[e.gold for e in sent] for sent in sentences]
     preds = [[e.pred for e in sent] for sent in sentences]

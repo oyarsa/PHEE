@@ -356,8 +356,9 @@ class ReinforcementTrainer(ModelDistiller):
 		if self.use_tensorboard:
 			try:
 				from torch.utils.tensorboard import SummaryWriter
+				import os
 
-				writer = SummaryWriter()
+				writer = SummaryWriter(comment="-" + os.getenv("TB_RUN_NAME", ""))
 			except:
 				log_line(log)
 				log.warning(

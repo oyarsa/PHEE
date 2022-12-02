@@ -28,11 +28,12 @@ ner:
   Corpus: ColumnCorpus-FGCR
   tag_dictionary: resources/taggers/fgcr_tags.pkl
   ColumnCorpus-FGCR:
-    data_folder: datasets/fgcr
+      # data_folder: datasets/fgcr
+    data_folder: datasets/fgcr_bio
     column_format:
       0: text
       1: ner
-    tag_to_bioes: ner
+      # tag_to_bioes: ner
 
 target_dir: resources/taggers/
 targets: ner
