@@ -4,3 +4,4 @@ brat
 __pycache__
 */__pycache__
 *.swp
+.ipynb_checkpoints
